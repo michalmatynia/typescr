@@ -27,6 +27,6 @@ function combine(
   console.log(combineAges)
   const combineStringAges = combine('30','26', 'as-number');
   console.log(combineStringAges)
-  const combineNames = combine('Max', 'Anna', 'as-text')
+  const combineNames = combine('Max', 'Anna', 'as-number')
   console.log(combineNames)
   
