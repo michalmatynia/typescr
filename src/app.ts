@@ -1,226 +1,101 @@
-/* INTERSECTION TYPES */
-
-// type Admin = {
-//     firstName: string;
-//     privileges: string[]
-// };
-
-// type Employee = {
-//     firstName: string;
-//     startDate: Date;
-// };
-
-// // Merge Object types
-// type ElevatedEmployee = Admin & Employee
-
-// const el : ElevatedEmployee = {
-//     firstName: 'Max',
-//     privileges: ['create-server'],
-//     startDate: new Date()
-// }
-
-/* Decalre the same through Interface */
-interface Admin {
-    firstName: string;
-    privileges: string[]
-};
-
-interface Employee{
-    firstName: string;
-    startDate: Date;
-};
-
-interface ElevatedEmployee extends Employee, Admin {
-
+// Autobind Decorator
+function MyAutobind(
+  target: any,
+  methodName: string,
+  descriptor: PropertyDescriptor
+) {
+  const originalMethod = descriptor.value;
+  const adjDescriptor: PropertyDescriptor = {
+    configurable: true,
+    enumerable: false,
+    get() {
+      const boundFn = originalMethod.bind(this);
+      return boundFn;
+    },
+  };
+  return adjDescriptor;
 }
 
-// Merge Object types
-// type ElevatedEmployee = Admin & Employee
+// ProjectInput Class
+class ProjectInput {
+  templateElement: HTMLTemplateElement;
+  hostElement: HTMLDivElement;
+  element: HTMLFormElement;
+  titleInputElement: HTMLInputElement;
+  descriptionInputElement: HTMLInputElement;
+  peopleInputElement: HTMLInputElement;
 
-const el : ElevatedEmployee = {
-    firstName: 'Max',
-    privileges: ['create-server'],
-    startDate: new Date()
-}
+  constructor() {
+    this.templateElement = document.getElementById(
+      "project-input"
+    )! as HTMLTemplateElement;
+    this.hostElement = document.getElementById("app")! as HTMLDivElement;
 
+    const importedNode = document.importNode(
+      this.templateElement.content,
+      true
+    );
+    this.element = importedNode.firstElementChild as HTMLFormElement;
+    this.element.id = "user-input";
 
-// Another Intersection Type Example
-type Combinable = string | number;
-type Numeric = number | boolean;
+    this.titleInputElement = this.element.querySelector(
+      "#title"
+    ) as HTMLInputElement;
+    this.descriptionInputElement = this.element.querySelector(
+      "#description"
+    ) as HTMLInputElement;
+    this.peopleInputElement = this.element.querySelector(
+      "#people"
+    ) as HTMLInputElement;
 
-type Universal = Combinable & Numeric
-
-
-/* TYPE GUARDS */
-
- function addTyp(a: Combinable, b: Combinable) {
-         // Type Guard - typeof - GOOD FOR EVERYTHING
-
-    if (typeof a === 'string' || typeof b === 'string') {
-      return a.toString() + b.toString();
-    }
-    return a + b;
+    this.configure();
+    this.attach();
   }
-  
-  type UnknownEmployee = Employee | Admin;
 
-// 'in' TYPE GUARD - GOOD FOR OBJECTS
+  private gatherUserInput(): [string, string, number] | void {
+    const enteredTitle = this.titleInputElement.value;
+    const enteredDescription = this.descriptionInputElement.value;
+    const enteredPeople = this.peopleInputElement.value;
 
- function printEmployeeInformation(emp: UnknownEmployee) {
-    console.log('Name: ' + emp.firstName);
+    if (
+      enteredTitle.trim().length === 0 ||
+      enteredDescription.trim().length === 0 ||
+      enteredPeople.trim().length === 0
+    ) {
+        alert('Invalid input, please try again!')
+        return;
 
-         // Type Guard for internal Class property
-
-    if ('privileges' in emp) {
-      console.log('Privileges: ' + emp.privileges);
-    }
-    if ('startDate' in emp) {
-      console.log('Start Date: ' + emp.startDate);
+    } else {
+        return [enteredTitle, enteredDescription, +enteredPeople]
     }
   }
 
-printEmployeeInformation({firstName: 'Steve', startDate: new Date()})
+  private clearInputs() {
+      this.titleInputElement.value = ''
+      this.descriptionInputElement.value = ''
+      this.peopleInputElement.value = ''
 
- // Instance of Type Guard Class - GOOD FOR INSTANCES
+  }
 
- class Car {
-     drive(){
-         console.log('Driving...');
-         
-     }
+  @MyAutobind
+  private submitHandler(event: Event) {
+    event.preventDefault();
+    const userInput = this.gatherUserInput();
+    console.log(this.titleInputElement.value);
 
- }
-
- class Truck {
-    drive(){
-        console.log('Driving...');
+    if(Array.isArray(userInput)) {
+        const [title, desc, people] = userInput
+        console.log(title,desc,people);
         
     }
-    loadCargo(amount: number) {
-        console.log('Loading amount...' + amount);
-        
-    }
-}
-
- type Vehicle = Car | Truck;
-
- const v1 = new Car()
- const v2 = new Truck()
-
- function useVehicle(vehicle: Vehicle) {
-    vehicle.drive()
-    
-    // Instance of Type Guard
-    if(vehicle instanceof Truck) {
-
-        vehicle.loadCargo(1000)
-    }
- }
-
- useVehicle(v1)
- useVehicle(v2)
-
- /* DISCRIMINATED UNION */
- interface Bird {
-     kind: 'bird'; // Literal Type for Discriminated Union
-     flyingSpeed: number;
- }
-
- interface Horse { 
-    kind: 'horse'; // Literal Type for Discriminated Union
-     runningSpeed: number;
- }
-
- type Animal = Bird | Horse;
-
- function moveAnimal(animal: Animal) {
-    let speed; 
-    
-    switch(animal.kind) {
-         case 'bird':
-             speed = animal.flyingSpeed;
-             break
-             case 'horse':
-                 speed = animal.runningSpeed;
-     }
-
-     console.log('Moving Speed: ' + speed);
-     
- }
-
- moveAnimal({kind: 'bird', flyingSpeed: 10})
-
- /* TYPE CASTING */
-
- // Version 1
- const userInputElement = <HTMLInputElement>document.getElementById('user-input')! // I need to signify, that's it's HTML INPUT ELEMENT
-
- userInputElement.value = 'Hi there !'
-
- // Version 2 for React 
-
- const userInputElement2 = document.getElementById('user-input')! as HTMLInputElement // I need to signify, that's it's not UNDEFINED AND  HTML INPUT ELEMENT
- userInputElement2.value = 'Hi there !'
-
-  // Version 3 for React , to avoid exclamation mark (if unsure whether the value if undefined)
-
-  const userInputElement3 = document.getElementById('user-input') as HTMLInputElement // I need to signify, that's it's not UNDEFINED AND  HTML INPUT ELEMENT
-  
-  if(userInputElement3) {
-
-      (userInputElement3 as HTMLInputElement).value = 'Hi there !'
+  }
+  private configure() {
+    this.element.addEventListener("submit", this.submitHandler);
   }
 
-
-  // FEATURES THAT HELP US WRITE BETTER CODE
-
-interface ErrorContainer{
-    // { email: 'Not a valid email', username: 'Must start'}
-
-    id: string;
-    // index type
-    // for example property names need to be string, 
-    [prop: string]: string
+  private attach() {
+    this.hostElement.insertAdjacentElement("afterbegin", this.element);
+  }
 }
 
-const errorBag: ErrorContainer = {
-    id: 'some id',
-    email: 'some string',
-    username: 'Must start with a letter'
-}
-
-// FUNCTION OverLoads
-// I'm being more specific for my result and input, because I have if
-function addTypOverload(a: number, b: number): number;
-function addTypOverload(a: string, b: string): string;
-function addTypOverload(a: Combinable, b: Combinable) {
-
-if (typeof a === 'string' || typeof b === 'string') {
- return a.toString() + b.toString();
-}
-return a + b;
-}
-
-const result = addTypOverload('Max', 'Schwarz')
-
-result.split(' ')
-
-// OPTIONAL CHAINING
-const fetchedUserData = {
-    id: 'u1',
-    firstName: 'Max',
-    job: {title: 'CEO', description: 'job description'}
-
-}
-
-// OPTIONS CHaining !
-console.log(fetchedUserData.job && fetchedUserData.job.title);
-
-// In Typescript I have an even better way of Checking
-console.log(fetchedUserData?.job?.title);
-
-
-// NULLISH COALESCING
-const userInput = '';
-
-const storedData = userInput ?? 'DEFAULT'; // If this is null or and undefined, print even if it's an empty string (doesn't treat empty string as falsy)
+const prjInput = new ProjectInput();

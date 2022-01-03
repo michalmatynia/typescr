@@ -1,108 +1,74 @@
 "use strict";
-/* INTERSECTION TYPES */
-var _a;
-;
-;
-// Merge Object types
-// type ElevatedEmployee = Admin & Employee
-const el = {
-    firstName: 'Max',
-    privileges: ['create-server'],
-    startDate: new Date()
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-/* TYPE GUARDS */
-function addTyp(a, b) {
-    // Type Guard - typeof - GOOD FOR EVERYTHING
-    if (typeof a === 'string' || typeof b === 'string') {
-        return a.toString() + b.toString();
-    }
-    return a + b;
+// Autobind Decorator
+function MyAutobind(target, methodName, descriptor) {
+    const originalMethod = descriptor.value;
+    const adjDescriptor = {
+        configurable: true,
+        enumerable: false,
+        get() {
+            const boundFn = originalMethod.bind(this);
+            return boundFn;
+        },
+    };
+    return adjDescriptor;
 }
-// 'in' TYPE GUARD - GOOD FOR OBJECTS
-function printEmployeeInformation(emp) {
-    console.log('Name: ' + emp.firstName);
-    // Type Guard for internal Class property
-    if ('privileges' in emp) {
-        console.log('Privileges: ' + emp.privileges);
+// ProjectInput Class
+class ProjectInput {
+    constructor() {
+        this.templateElement = document.getElementById("project-input");
+        this.hostElement = document.getElementById("app");
+        const importedNode = document.importNode(this.templateElement.content, true);
+        this.element = importedNode.firstElementChild;
+        this.element.id = "user-input";
+        this.titleInputElement = this.element.querySelector("#title");
+        this.descriptionInputElement = this.element.querySelector("#description");
+        this.peopleInputElement = this.element.querySelector("#people");
+        this.configure();
+        this.attach();
     }
-    if ('startDate' in emp) {
-        console.log('Start Date: ' + emp.startDate);
+    gatherUserInput() {
+        const enteredTitle = this.titleInputElement.value;
+        const enteredDescription = this.descriptionInputElement.value;
+        const enteredPeople = this.peopleInputElement.value;
+        if (enteredTitle.trim().length === 0 ||
+            enteredDescription.trim().length === 0 ||
+            enteredPeople.trim().length === 0) {
+            alert('Invalid input, please try again!');
+            return;
+        }
+        else {
+            return [enteredTitle, enteredDescription, +enteredPeople];
+        }
+    }
+    clearInputs() {
+        this.titleInputElement.value = '';
+        this.descriptionInputElement.value = '';
+        this.peopleInputElement.value = '';
+    }
+    submitHandler(event) {
+        event.preventDefault();
+        const userInput = this.gatherUserInput();
+        console.log(this.titleInputElement.value);
+        if (Array.isArray(userInput)) {
+            const [title, desc, people] = userInput;
+            console.log(title, desc, people);
+        }
+    }
+    configure() {
+        this.element.addEventListener("submit", this.submitHandler);
+    }
+    attach() {
+        this.hostElement.insertAdjacentElement("afterbegin", this.element);
     }
 }
-printEmployeeInformation({ firstName: 'Steve', startDate: new Date() });
-// Instance of Type Guard Class - GOOD FOR INSTANCES
-class Car {
-    drive() {
-        console.log('Driving...');
-    }
-}
-class Truck {
-    drive() {
-        console.log('Driving...');
-    }
-    loadCargo(amount) {
-        console.log('Loading amount...' + amount);
-    }
-}
-const v1 = new Car();
-const v2 = new Truck();
-function useVehicle(vehicle) {
-    vehicle.drive();
-    // Instance of Type Guard
-    if (vehicle instanceof Truck) {
-        vehicle.loadCargo(1000);
-    }
-}
-useVehicle(v1);
-useVehicle(v2);
-function moveAnimal(animal) {
-    let speed;
-    switch (animal.kind) {
-        case 'bird':
-            speed = animal.flyingSpeed;
-            break;
-        case 'horse':
-            speed = animal.runningSpeed;
-    }
-    console.log('Moving Speed: ' + speed);
-}
-moveAnimal({ kind: 'bird', flyingSpeed: 10 });
-/* TYPE CASTING */
-// Version 1
-const userInputElement = document.getElementById('user-input'); // I need to signify, that's it's HTML INPUT ELEMENT
-userInputElement.value = 'Hi there !';
-// Version 2 for React 
-const userInputElement2 = document.getElementById('user-input'); // I need to signify, that's it's not UNDEFINED AND  HTML INPUT ELEMENT
-userInputElement2.value = 'Hi there !';
-// Version 3 for React , to avoid exclamation mark (if unsure whether the value if undefined)
-const userInputElement3 = document.getElementById('user-input'); // I need to signify, that's it's not UNDEFINED AND  HTML INPUT ELEMENT
-if (userInputElement3) {
-    userInputElement3.value = 'Hi there !';
-}
-const errorBag = {
-    id: 'some id',
-    email: 'some string',
-    username: 'Must start with a letter'
-};
-function addTypOverload(a, b) {
-    if (typeof a === 'string' || typeof b === 'string') {
-        return a.toString() + b.toString();
-    }
-    return a + b;
-}
-const result = addTypOverload('Max', 'Schwarz');
-result.split(' ');
-// OPTIONAL CHAINING
-const fetchedUserData = {
-    id: 'u1',
-    firstName: 'Max',
-    job: { title: 'CEO', description: 'job description' }
-};
-// OPTIONS CHaining !
-console.log(fetchedUserData.job && fetchedUserData.job.title);
-// In Typescript I have an even better way of Checking
-console.log((_a = fetchedUserData === null || fetchedUserData === void 0 ? void 0 : fetchedUserData.job) === null || _a === void 0 ? void 0 : _a.title);
-// NULLISH COALESCING
-const userInput = '';
-const storedData = userInput !== null && userInput !== void 0 ? userInput : 'DEFAULT'; // If this is null or and undefined, print even if it's an empty string (doesn't treat empty string as falsy)
+__decorate([
+    MyAutobind
+], ProjectInput.prototype, "submitHandler", null);
+const prjInput = new ProjectInput();
 //# sourceMappingURL=app.js.map
