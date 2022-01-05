@@ -1,3 +1,51 @@
+// Validation
+
+interface Validatable {
+  value: string | number;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+}
+
+function Myvalidate(validatableInput: Validatable) {
+  let isValid = true;
+
+  if (validatableInput.required) {
+    isValid = isValid && validatableInput.value.toString().trim().length !== 0;
+  }
+
+  if (
+    validatableInput.minLength != null &&
+    typeof validatableInput.value === "string"
+  ) {
+    isValid =
+      isValid && validatableInput.value.length >= validatableInput.minLength;
+  }
+  if (
+    validatableInput.maxLength != null &&
+    typeof validatableInput.value === "string"
+  ) {
+    isValid =
+      isValid && validatableInput.value.length <= validatableInput.maxLength;
+  }
+  if (
+    validatableInput.min != null &&
+    typeof validatableInput.value === "number"
+  ) {
+    isValid = isValid && validatableInput.value >= validatableInput.min;
+  }
+  if (
+    validatableInput.max != null &&
+    typeof validatableInput.value === "number"
+  ) {
+    isValid = isValid && validatableInput.value <= validatableInput.max;
+  }
+
+  return isValid;
+}
+
 // Autobind Decorator
 function MyAutobind(
   target: any,
@@ -14,6 +62,43 @@ function MyAutobind(
     },
   };
   return adjDescriptor;
+}
+
+// ProjectList Class
+
+class ProjectList {
+  templateElement: HTMLTemplateElement;
+  hostElement: HTMLDivElement;
+  element: HTMLElement;
+
+  constructor(private type: 'active' | 'finished') {
+    this.templateElement = document.getElementById(
+      "project-list"
+    )! as HTMLTemplateElement;
+    this.hostElement = document.getElementById("app")! as HTMLDivElement;
+
+    const importedNode = document.importNode(
+      this.templateElement.content,
+      true
+    );
+    this.element = importedNode.firstElementChild as HTMLElement;
+    this.element.id = `${this.type}-projects`;
+
+    // Attached to the DOM
+    this.attach();
+    this.renderContent();
+  }
+
+  private renderContent() {
+    const listId = `${this.type}-project-list`;
+    this.element.querySelector('ul')!.id= listId
+    this.element.querySelector('h2')!.textContent = this.type.toUpperCase() + 'PROJECTS';
+  }
+
+  private attach() {
+    // beforeend = before closing tag
+    this.hostElement.insertAdjacentElement('beforeend', this.element)
+  }
 }
 
 // ProjectInput Class
@@ -57,24 +142,42 @@ class ProjectInput {
     const enteredDescription = this.descriptionInputElement.value;
     const enteredPeople = this.peopleInputElement.value;
 
-    if (
-      enteredTitle.trim().length === 0 ||
-      enteredDescription.trim().length === 0 ||
-      enteredPeople.trim().length === 0
-    ) {
-        alert('Invalid input, please try again!')
-        return;
+    const titleValidatable: Validatable = {
+      value: enteredTitle,
+      required: true,
+    };
+    const descriptionValidatable: Validatable = {
+      value: enteredDescription,
+      required: true,
+      minLength: 5,
+    };
+    const peopleValidatable: Validatable = {
+      value: +enteredPeople,
+      required: true,
+      min: 1,
+      max: 5,
+    };
 
+    if (
+      // enteredTitle.trim().length === 0 ||
+      // enteredDescription.trim().length === 0 ||
+      // enteredPeople.trim().length === 0
+
+      !Myvalidate(titleValidatable) ||
+      !Myvalidate(descriptionValidatable) ||
+      !Myvalidate(peopleValidatable)
+    ) {
+      alert("Invalid input, please try again!");
+      return;
     } else {
-        return [enteredTitle, enteredDescription, +enteredPeople]
+      return [enteredTitle, enteredDescription, +enteredPeople];
     }
   }
 
   private clearInputs() {
-      this.titleInputElement.value = ''
-      this.descriptionInputElement.value = ''
-      this.peopleInputElement.value = ''
-
+    this.titleInputElement.value = "";
+    this.descriptionInputElement.value = "";
+    this.peopleInputElement.value = "";
   }
 
   @MyAutobind
@@ -83,10 +186,9 @@ class ProjectInput {
     const userInput = this.gatherUserInput();
     console.log(this.titleInputElement.value);
 
-    if(Array.isArray(userInput)) {
-        const [title, desc, people] = userInput
-        console.log(title,desc,people);
-        
+    if (Array.isArray(userInput)) {
+      const [title, desc, people] = userInput;
+      console.log(title, desc, people);
     }
   }
   private configure() {
@@ -99,3 +201,7 @@ class ProjectInput {
 }
 
 const prjInput = new ProjectInput();
+const activePrjList = new ProjectList('active')
+
+
+
